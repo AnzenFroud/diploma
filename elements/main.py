@@ -26,12 +26,11 @@
 import tkinter as tk
 from pandastable import Table
 
-root = tk.Tk()
-
-frame = tk.Frame(root)
-frame.pack()
-
-pt = Table(frame)
+root = tk.Tk() # инициализация окна
+root.geometry("700x700+200+200") # размер и расположение окна
+frame_table = tk.Frame(root,width=600,height=600) # создание фрейма
+frame_table.pack(fill='both', expand=True) #растягивание по горизонтали и вертикали
+# expand - определяет, забирает ли виджет "лишнее" пр-во, если родительский контейнер увеличивается
+pt = Table(frame_table,showtoolbar=True,showstatusbar=True) # инициализация таблицы
 pt.show()
-
 root.mainloop()
