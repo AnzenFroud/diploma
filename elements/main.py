@@ -11,6 +11,14 @@ from markStatementsForm import MarkStatementsForm
 def open_mark_statements():
     MarkStatementsForm(root)   
 
+from makedocument import generate_sticker
+# Функция теперь получает таблицу pt
+def make_sticker():
+    generate_sticker(pt)
+from makeAct import generate_act
+def makeAct():
+    generate_act(pt)
+
 class HorizontalToolBar(ToolBar):
     def createButtons(self):
         for button in self.bnames:
@@ -47,13 +55,16 @@ control_frame.pack(side='top', fill='x')
 toggle_btn = tk.Button(control_frame, text="Показать панель инструментов", command=toggle_toolbar)
 toggle_btn.pack(side='left', padx=5, pady=5)
 
-# Дополнительнst кнопки
+# Дополнительные кнопки
 check_statments = tk.Button(control_frame, text="Проверить наименования",command=open_check_statements)
 check_statments.pack(side='left', padx=5, pady=5)
 mark_statments = tk.Button(control_frame, text="Отметить оборудование", command=open_mark_statements)
 mark_statments.pack(side='left', padx=5, pady=5)
-make_sticker = tk.Button(control_frame, text="Сделать этикетку", command=open_mark_statements)
-make_sticker.pack(side='left', padx=5, pady=5)
+make_sticker_btn = tk.Button(control_frame, text="Сделать этикетку", command=make_sticker)
+make_sticker_btn.pack(side='left', padx=5, pady=5)
+make_act_btn = tk.Button(control_frame, text="Создать акт", command=makeAct)
+make_act_btn.pack(side='left', padx=5, pady=5)
+
 # Фрейм для панели инструментов
 toolbar_frame = tk.Frame(main_frame)
 
@@ -71,14 +82,11 @@ model = TableModel(dataframe=df)
 # Инициализация таблицы без встроенной панели инструментов
 pt = Table(table_frame, model=model, showtoolbar=False, showstatusbar=True)
 pt.show()
+# Разрешаем выбор строки при клике
+pt.bind("<ButtonRelease-1>", lambda event: pt.setSelectedRow(pt.get_row_clicked(event)))
 
 # Создание панели инструментов
 toolbar = HorizontalToolBar(toolbar_frame, pt)
 toolbar.pack(side='top', anchor='w')
 
 root.mainloop()
-
-
-
-
-

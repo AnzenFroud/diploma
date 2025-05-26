@@ -1,2 +1,3 @@
 pandastable
 pyinstaller
+customtkinter
