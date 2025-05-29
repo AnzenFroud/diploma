@@ -1,31 +1,38 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import filedialog, colorchooser
 
-class FileEntryGroup(tk.LabelFrame):
-    def __init__(self, parent, index, highlight_color):
-        super().__init__(parent, text=f"Файл {index}", relief="groove", borderwidth=2, padx=10, pady=10)
-        self.file_path_var = tk.StringVar()
-        self.inventory_column_var = tk.StringVar()
 
-        # Поле для ввода пути к файлу
-        file_label = tk.Label(self, text="Путь к файлу:")
-        file_label.grid(row=0, column=0, sticky="e", padx=5, pady=2)
+class FileEntryGroup(ctk.CTkFrame):
+    def __init__(self, parent, index, default_color="#ffffff"):
+        super().__init__(parent)
+        self.file_path_var = ctk.StringVar()
+        self.inventory_column_var = ctk.StringVar()
+        self.color = default_color
 
-        file_entry = tk.Entry(self, textvariable=self.file_path_var, width=40)
-        file_entry.grid(row=0, column=1, padx=5, pady=2)
+        self.configure(corner_radius=10, fg_color="#2a2a2a")
 
-        browse_button = tk.Button(self, text="Обзор", command=self.browse_file)
-        browse_button.grid(row=0, column=2, padx=5, pady=2)
+        title = ctk.CTkLabel(self, text=f"Файл {index}", font=ctk.CTkFont(size=14, weight="bold"))
+        title.grid(row=0, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 5))
 
-        # Поле для ввода названия столбца с инвентарным номером
-        inventory_label = tk.Label(self, text="Столбец с инвентарным номером:")
-        inventory_label.grid(row=1, column=0, sticky="e", padx=5, pady=2)
+        file_label = ctk.CTkLabel(self, text="Путь к файлу:")
+        file_label.grid(row=1, column=0, sticky="e", padx=10, pady=5)
 
-        inventory_entry = tk.Entry(self, textvariable=self.inventory_column_var, width=30)
-        inventory_entry.grid(row=1, column=1, padx=5, pady=2, columnspan=2, sticky="w")
+        file_entry = ctk.CTkEntry(self, textvariable=self.file_path_var, width=320)
+        file_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        # Установка цвета фона
-        self.configure(bg=highlight_color)
+        browse_button = ctk.CTkButton(self, text="Обзор", command=self.browse_file, width=80)
+        browse_button.grid(row=1, column=2, padx=10, pady=5)
+
+        inventory_label = ctk.CTkLabel(self, text="Столбец инв. номера:")
+        inventory_label.grid(row=2, column=0, sticky="e", padx=10, pady=5)
+
+        inventory_entry = ctk.CTkEntry(self, textvariable=self.inventory_column_var, width=150)
+        inventory_entry.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+
+        # Индикатор цвета
+        self.color_box = ctk.CTkButton(self, text="", width=20, height=20, fg_color=self.color,
+                                       command=self.change_color)
+        self.color_box.grid(row=2, column=2, padx=10, pady=5)
 
     def browse_file(self):
         file_path = filedialog.askopenfilename(
@@ -35,100 +42,64 @@ class FileEntryGroup(tk.LabelFrame):
         if file_path:
             self.file_path_var.set(file_path)
 
-class MarkStatementsForm(tk.Toplevel):
+    def change_color(self):
+        color_code = colorchooser.askcolor(title="Выберите цвет")[1]
+        if color_code:
+            self.color = color_code
+            self.color_box.configure(fg_color=color_code)
+
+
+class MarkStatementsForm(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Проверка инвентарных номеров")
-        self.geometry("600x500")
+        self.geometry("700x500")
         self.resizable(True, True)
 
         self.file_entries = []
-        self.highlight_color = "#ffffff"  # Начальный цвет подсветки
 
-        # Поле для указания названия столбца с инвентарным номером из исходного файла
-        source_frame = tk.Frame(self)
-        source_frame.pack(fill="x", padx=10, pady=10)
+        self.source_column_var = ctk.StringVar()
 
-        source_label = tk.Label(source_frame, text="Столбец с инвентарным номером в исходном файле:")
-        source_label.pack(side="left")
+        source_frame = ctk.CTkFrame(self, corner_radius=10)
+        source_frame.pack(fill="x", padx=15, pady=10)
 
-        self.source_column_var = tk.StringVar()
-        source_entry = tk.Entry(source_frame, textvariable=self.source_column_var, width=30)
-        source_entry.pack(side="left", padx=5, pady=2)
+        source_label = ctk.CTkLabel(source_frame, text="Столбец инв. номера в исходном файле:")
+        source_label.pack(side="left", padx=10, pady=10)
 
-        # Кнопка для запуска проверки
-        check_button = tk.Button(self, text="Проверить", command=self.check_statements)
-        check_button.pack(pady=5)
+        source_entry = ctk.CTkEntry(source_frame, textvariable=self.source_column_var, width=200)
+        source_entry.pack(side="left", padx=5)
 
-        # Кнопка для выбора цвета подсветки
-        color_button = tk.Button(self, text="Выбрать цвет подсветки", command=self.choose_highlight_color)
-        color_button.pack(pady=5)
+        button_frame = ctk.CTkFrame(self, corner_radius=10)
+        button_frame.pack(fill="x", padx=15)
 
-        # Создание холста и полосы прокрутки
-        container = tk.Frame(self)
-        container.pack(fill="both", expand=True)
+        check_button = ctk.CTkButton(button_frame, text="Проверить", command=self.check_statements)
+        check_button.pack(side="left", padx=5, pady=10)
 
-        self.canvas = tk.Canvas(container)
-        self.scrollbar = tk.Scrollbar(container, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        add_file_button = ctk.CTkButton(button_frame, text="Добавить файл", command=self.add_file_entry)
+        add_file_button.pack(side="left", padx=5, pady=10)
 
-        self.scrollbar.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollable_frame = ctk.CTkScrollableFrame(self, corner_radius=10)
+        self.scrollable_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
 
-        # Создание фрейма внутри холста
-        self.entries_frame = tk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.entries_frame, anchor="nw")
-
-        # Обновление области прокрутки при изменении размера содержимого
-        self.entries_frame.bind("<Configure>", self.on_frame_configure)
-
-        # Привязка событий прокрутки мыши
-        self.canvas.bind("<Enter>", self._bind_mousewheel)
-        self.canvas.bind("<Leave>", self._unbind_mousewheel)
-
-        # Добавляем первую группу ввода по умолчанию
         self.add_file_entry()
-
-        # Кнопка "Добавить файл" внизу
-        add_file_button = tk.Button(self, text="Добавить файл", command=self.add_file_entry)
-        add_file_button.pack(side="bottom", pady=10)
-
-        # Обработка закрытия окна
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
-
-    def choose_highlight_color(self):
-        color_code = colorchooser.askcolor(title="Выберите цвет подсветки")[1]
-        if color_code:
-            self.highlight_color = color_code
-            # Обновляем цвет фона у всех существующих групп
-            for group in self.file_entries:
-                group.configure(bg=color_code)
 
     def add_file_entry(self):
         index = len(self.file_entries) + 1
-        group = FileEntryGroup(self.entries_frame, index, self.highlight_color)
-        group.pack(fill="x", padx=5, pady=5)
+        group = FileEntryGroup(self.scrollable_frame, index)
+        group.pack(fill="x", padx=10, pady=10)
         self.file_entries.append(group)
 
     def check_statements(self):
-        # Логика проверки инвентарных номеров
-        pass
+        for idx, group in enumerate(self.file_entries, start=1):
+            print(f"Файл {idx}: {group.file_path_var.get()}")
+            print(f"  Столбец инв. номера: {group.inventory_column_var.get()}")
+            print(f"  Цвет: {group.color}")
 
-    def on_frame_configure(self, event):
-        if self.canvas.winfo_exists():
-            self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
-    def _bind_mousewheel(self, event):
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-
-    def _unbind_mousewheel(self, event):
-        self.canvas.unbind_all("<MouseWheel>")
-
-    def _on_mousewheel(self, event):
-        if self.canvas.winfo_exists():
-            self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
-
-    def on_close(self):
-        # Отменяем все привязки событий, чтобы избежать ошибок после закрытия окна
-        self.canvas.unbind_all("<MouseWheel>")
-        self.destroy()
+if __name__ == "__main__":
+    ctk.set_appearance_mode("dark")
+    ctk.set_default_color_theme("blue")
+    root = ctk.CTk()
+    root.withdraw()
+    MarkStatementsForm(root)
+    root.mainloop()

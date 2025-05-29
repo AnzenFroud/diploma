@@ -1,44 +1,33 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import filedialog
 
-class FileEntryGroup(tk.LabelFrame):
+ctk.set_appearance_mode("dark")  # Темная тема
+ctk.set_default_color_theme("blue")  # Можно поменять на "green", "dark-blue" и др.
+
+class FileEntryGroup(ctk.CTkFrame):
     def __init__(self, parent, index):
-        super().__init__(
-            parent,
-            text=f"Файл {index}",
-            relief='groove',
-            borderwidth=2,
-            padx=10,
-            pady=10
-        )
+        super().__init__(parent)
         
-        self.file_path_var = tk.StringVar()
-        self.name_column_var = tk.StringVar()
-        self.inventory_column_var = tk.StringVar()
+        self.file_path_var = ctk.StringVar()
+        self.name_column_var = ctk.StringVar()
+        self.inventory_column_var = ctk.StringVar()
 
-        # Поле для ввода пути к файлу
-        file_label = tk.Label(self, text="Путь к файлу:")
-        file_label.grid(row=0, column=0, sticky='e', padx=5, pady=2)
+        # Заголовок
+        title = ctk.CTkLabel(self, text=f"Файл {index}", font=ctk.CTkFont(size=16, weight="bold"))
+        title.grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 8))
 
-        file_entry = tk.Entry(self, textvariable=self.file_path_var, width=40)
-        file_entry.grid(row=0, column=1, padx=5, pady=2)
+        # Путь к файлу
+        ctk.CTkLabel(self, text="Путь к файлу:").grid(row=1, column=0, sticky="e", padx=5, pady=4)
+        ctk.CTkEntry(self, textvariable=self.file_path_var, width=300).grid(row=1, column=1, padx=5, pady=4)
+        ctk.CTkButton(self, text="Обзор", width=80, command=self.browse_file).grid(row=1, column=2, padx=5, pady=4)
 
-        browse_button = tk.Button(self, text="Обзор", command=self.browse_file)
-        browse_button.grid(row=0, column=2, padx=5, pady=2)
+        # Столбец с наименованием
+        ctk.CTkLabel(self, text="Столбец с наименованием:").grid(row=2, column=0, sticky="e", padx=5, pady=4)
+        ctk.CTkEntry(self, textvariable=self.name_column_var, width=250).grid(row=2, column=1, columnspan=2, sticky="w", padx=5, pady=4)
 
-        # Поле для ввода названия столбца с наименованием
-        name_label = tk.Label(self, text="Столбец с наименованием:")
-        name_label.grid(row=1, column=0, sticky='e', padx=5, pady=2)
-
-        name_entry = tk.Entry(self, textvariable=self.name_column_var, width=30)
-        name_entry.grid(row=1, column=1, padx=5, pady=2, columnspan=2, sticky='w')
-
-        # Поле для ввода названия столбца с инвентарным номером
-        inventory_label = tk.Label(self, text="Столбец с инвентарным номером:")
-        inventory_label.grid(row=2, column=0, sticky='e', padx=5, pady=2)
-
-        inventory_entry = tk.Entry(self, textvariable=self.inventory_column_var, width=30)
-        inventory_entry.grid(row=2, column=1, padx=5, pady=2, columnspan=2, sticky='w')
+        # Столбец с инвентарным номером
+        ctk.CTkLabel(self, text="Столбец с инвентарным номером:").grid(row=3, column=0, sticky="e", padx=5, pady=4)
+        ctk.CTkEntry(self, textvariable=self.inventory_column_var, width=250).grid(row=3, column=1, columnspan=2, sticky="w", padx=5, pady=4)
 
     def browse_file(self):
         file_path = filedialog.askopenfilename(
@@ -48,84 +37,47 @@ class FileEntryGroup(tk.LabelFrame):
         if file_path:
             self.file_path_var.set(file_path)
 
-class CheckStatementsForm(tk.Toplevel):
+class CheckStatementsForm(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Проверка наименований")
-        self.geometry("600x400")
+        self.geometry("640x500")
         self.resizable(True, True)
 
         self.file_entries = []
 
-        # Создание холста и полосы прокрутки
-        container = tk.Frame(self)
-        container.pack(fill='both', expand=True)
+        # Основной контейнер с прокруткой
+        container = ctk.CTkScrollableFrame(self)
+        container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self.canvas = tk.Canvas(container, borderwidth=0)
-        self.scrollbar = tk.Scrollbar(container, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.entries_frame = container
 
-        self.scrollbar.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
+        # Кнопки
+        button_frame = ctk.CTkFrame(self, fg_color="transparent")
+        button_frame.pack(pady=(5, 10))
 
-        # Создание фрейма внутри холста
-        self.entries_frame = tk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.entries_frame, anchor="nw")
+        ctk.CTkButton(button_frame, text="Добавить файл", command=self.add_file_entry).pack(side="left", padx=10)
+        ctk.CTkButton(button_frame, text="Проверить", command=self.check_statements).pack(side="left", padx=10)
 
-        # Обновление области прокрутки при изменении размера содержимого
-        self.entries_frame.bind("<Configure>", self.on_frame_configure)
-
-        # Привязка событий прокрутки мыши
-        self.bind_mousewheel_events()
-
-        # Кнопка для добавления новой группы ввода
-        add_button = tk.Button(self, text="Добавить файл", command=self.add_file_entry)
-        add_button.pack(pady=5)
-
-        # Кнопка для запуска проверки
-        check_button = tk.Button(self, text="Проверить", command=self.check_statements)
-        check_button.pack(pady=5)
-
-        # Добавляем первую группу ввода по умолчанию
+        # Добавляем первую группу по умолчанию
         self.add_file_entry()
-
-    def bind_mousewheel_events(self):
-        # Windows и MacOS
-        self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
-        # Linux
-        self.canvas.bind_all("<Button-4>", self.on_mousewheel)
-        self.canvas.bind_all("<Button-5>", self.on_mousewheel)
-
-    def on_mousewheel(self, event):
-        # Windows и MacOS
-        if event.num == 4 or event.delta > 0:
-            self.canvas.yview_scroll(-1, "units")
-        elif event.num == 5 or event.delta < 0:
-            self.canvas.yview_scroll(1, "units")
-
-    def on_frame_configure(self, event):
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def add_file_entry(self):
         index = len(self.file_entries) + 1
         group = FileEntryGroup(self.entries_frame, index)
-        group.pack(fill='x', pady=5)
+        group.pack(fill="x", pady=10, padx=10)
         self.file_entries.append(group)
 
     def check_statements(self):
         for idx, group in enumerate(self.file_entries, start=1):
-            file_path = group.file_path_var.get()
-            name_column = group.name_column_var.get()
-            inventory_column = group.inventory_column_var.get()
             print(f"Группа {idx}:")
-            print(f"  Файл: {file_path}")
-            print(f"  Столбец с наименованием: {name_column}")
-            print(f"  Столбец с инвентарным номером: {inventory_column}")
-            # Здесь можно добавить логику обработки каждого файла
+            print(f"  Файл: {group.file_path_var.get()}")
+            print(f"  Столбец с наименованием: {group.name_column_var.get()}")
+            print(f"  Столбец с инвентарным номером: {group.inventory_column_var.get()}")
 
-# Пример использования
+# Запуск
 if __name__ == "__main__":
-    root = tk.Tk()
-    root.withdraw()  # Скрыть основное окно
+    root = ctk.CTk()
+    root.withdraw()  # Скрываем основное окно
     CheckStatementsForm(root)
     root.mainloop()
